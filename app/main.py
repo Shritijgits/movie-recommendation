@@ -1,12 +1,15 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
+import os
 import joblib
 import pandas as pd
+from fastapi import FastAPI
+from pydantic import BaseModel
 
-# Load saved objects
-movies = joblib.load("model/movies.pkl")
-similarity = joblib.load("model/similarity.pkl")
+# ✅ Base directory (project root)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+# ✅ Load saved objects using absolute paths
+movies = joblib.load(os.path.join(BASE_DIR, "Model", "movies.pkl"))
+similarity = joblib.load(os.path.join(BASE_DIR, "Model", "similarity.pkl"))
 
 app = FastAPI(title="Movie Recommendation API")
 
@@ -34,9 +37,7 @@ def recommend_movies(data: MovieInput):
         key=lambda x: x[1]
     )[1:6]
 
-    recommendations = []
-    for i in movie_list:
-        recommendations.append(movies.iloc[i[0]].title)
+    recommendations = [movies.iloc[i[0]].title for i in movie_list]
 
     return {
         "input_movie": movie_name,

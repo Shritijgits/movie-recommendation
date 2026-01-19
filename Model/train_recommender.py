@@ -18,39 +18,51 @@ tmdb = pd.read_csv(TMDB_PATH)
 tmdb = tmdb[['title', 'overview']]
 tmdb['overview'] = tmdb['overview'].fillna("")
 
+# 🔥 LIMIT SIZE (Render free tier safe)
+tmdb = tmdb.head(1500)
+
 # ================= LOAD BOLLYWOOD =================
 print("Loading Bollywood dataset...")
 bolly = pd.read_csv(BOLLY_PATH)
 
-# 🔥 FORCE TEXT CREATION FOR BOLLYWOOD
+# 🔥 LIMIT SIZE
+bolly = bolly.head(800)
+
+# ================= CREATE TEXT FOR BOLLYWOOD =================
 print("Creating text features for Bollywood movies...")
 
-text_parts = []
+text_cols = [
+    col for col in bolly.columns
+    if col.lower() in ['genre', 'genres', 'actors', 'cast', 'director', 'keywords', 'story']
+]
 
-for col in bolly.columns:
-    if col.lower() in ['genre', 'genres', 'actors', 'cast', 'director', 'keywords', 'story']:
-        text_parts.append(bolly[col].astype(str))
-
-if not text_parts:
-    # LAST RESORT: use title itself
-    bolly['overview'] = bolly['title'].astype(str)
+if text_cols:
+    bolly['overview'] = bolly[text_cols].astype(str).agg(" ".join, axis=1)
 else:
-    bolly['overview'] = " ".join(text_parts)
+    bolly['overview'] = bolly['title'].astype(str)
 
 bolly = bolly[['title', 'overview']]
+bolly['overview'] = bolly['overview'].fillna("")
 
-# ================= MERGE =================
+# ================= MERGE DATA =================
 movies = pd.concat([tmdb, bolly], ignore_index=True)
-print(f"Total movies loaded: {len(movies)}")
+print(f"Total movies used for training: {len(movies)}")
 
 # ================= VECTORIZE =================
-vectorizer = TfidfVectorizer(stop_words="english")
+print("Vectorizing text...")
+vectorizer = TfidfVectorizer(
+    stop_words="english",
+    max_features=5000  # 🔥 MEMORY CONTROL
+)
+
 vectors = vectorizer.fit_transform(movies['overview'])
 
 # ================= SIMILARITY =================
+print("Computing similarity matrix...")
 similarity = cosine_similarity(vectors)
 
-# ================= SAVE =================
+# ================= SAVE MODELS =================
+print("Saving model files...")
 joblib.dump(movies, os.path.join(BASE_DIR, "movies.pkl"))
 joblib.dump(similarity, os.path.join(BASE_DIR, "similarity.pkl"))
 joblib.dump(vectorizer, os.path.join(BASE_DIR, "vectorizer.pkl"))

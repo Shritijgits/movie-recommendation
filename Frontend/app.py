@@ -7,7 +7,8 @@ st.title("🎬 Movie Recommendation System")
 st.write("Get movie recommendations based on your favorite movie.")
 
 # Backend API URL
-API_URL = "http://127.0.0.1:8000/recommend"
+API_URL = "https://movie-recommendation-y323.onrender.com/recommend"
+
 
 # Input
 movie_name = st.text_input("Enter a movie name:")
@@ -20,8 +21,17 @@ if st.button("Recommend"):
             "movie_name": movie_name
         }
 
-        try:
-            response = requests.post(API_URL, json=payload)
+     try:
+    response = requests.post(
+        API_URL,
+        json=payload,
+        timeout=30
+    )
+
+    if response.status_code == 200:
+        data = response.json()
+        ...
+
 
             if response.status_code == 200:
                 data = response.json()

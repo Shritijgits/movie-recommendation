@@ -7,7 +7,7 @@ st.title("🎬 Movie Recommendation System")
 st.write("Get movie recommendations based on your favorite movie.")
 
 # Backend API URL
-API_URL = "http://127.0.0.1:8000/recommend"
+API_URL = "https://movie-recommendation-y323.onrender.com/recommend"
 
 # Input
 movie_name = st.text_input("Enter a movie name:")
